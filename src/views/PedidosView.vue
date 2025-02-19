@@ -23,7 +23,6 @@
       </v-col>
     </v-row>
 
-    <!-- Tabela de Pedidos -->
     <v-data-table
       :headers="headers"
       :items="pedidosFiltrados"
@@ -37,13 +36,13 @@
         </v-toolbar>
       </template>
 
-      <!-- Botão "Editar" -->
+
       <template v-slot:[`item.actions`]="{ item }">
         <v-btn color="primary" @click.stop="editarPedido(item)">Editar</v-btn>
       </template>
     </v-data-table>
 
-    <!-- Diálogo para Editar/Criar Pedido -->
+
     <v-dialog v-model="dialog" max-width="600px">
       <v-card>
         <v-card-title>
@@ -51,7 +50,6 @@
         </v-card-title>
         <v-card-text>
           <v-container>
-            <!-- Seleção de Cliente -->
             <v-select
               v-model="editedItem.id_cliente"
               :items="clientes"
@@ -61,7 +59,7 @@
               variant="outlined"
             ></v-select>
 
-            <!-- Seleção de Produtos -->
+
             <v-autocomplete
               v-model="selectedProducts"
               :items="produtos"
@@ -73,7 +71,6 @@
               return-object
             ></v-autocomplete>
 
-            <!-- Lista de Itens Selecionados -->
             <v-list v-if="editedItem.itens.length">
               <v-list-item v-for="(item, index) in editedItem.itens" :key="item.id_produto">
                 <v-row align="center">
@@ -116,14 +113,14 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import api from '../services/api';
 
-// Estados Reativos
+
 const dialog = ref(false);
 const pedidos = ref([]);
 const clientes = ref([]);
 const produtos = ref([]);
 const selectedProducts = ref([]);
 const searchQuery = ref('');
-const selectedProductFilter = ref(null); // Filtro de produto selecionado
+const selectedProductFilter = ref(null); 
 
 const editedItem = ref({
   id_pedido: null,
@@ -140,10 +137,8 @@ const headers = ref([
 
 const pedidosFiltrados = computed(() => {
   return pedidos.value.filter((p) => {
-    // Filtro por nome do cliente
     const filtroCliente = !searchQuery.value || p.cliente_nome?.toLowerCase().includes(searchQuery.value.toLowerCase());
 
-    // Garante que p.itens é um array antes de chamar some()
     const filtroProduto = !selectedProductFilter.value || (p.itens && Array.isArray(p.itens) && p.itens.some(item => item.id_produto === selectedProductFilter.value));
 
     return filtroCliente && filtroProduto;
@@ -207,7 +202,7 @@ const removerItem = (index) => {
 
 const save = async () => {
   try {
-    // Mapeia os itens selecionados para o formato esperado pelo backend
+
     editedItem.value.itens = selectedProducts.value.map(produto => ({
       id_produto: produto.id_produto,
       qtde: produto.qtde || 1,
@@ -217,28 +212,27 @@ const save = async () => {
     console.log("Enviando pedido para salvar:", editedItem.value);
 
     if (editedItem.value.id_pedido) {
-      // Modo de edição: Atualiza o pedido existente
+
       console.log(`Atualizando pedido: PUT /pedidos/${editedItem.value.id_pedido}`);
       await api.put(`/pedidos/${editedItem.value.id_pedido}`, editedItem.value);
     } else {
-      // Modo de criação: Cria um novo pedido
+
       console.log("Criando novo pedido: POST /pedidos");
       const response = await api.post('/pedidos', editedItem.value);
 
-      // Verifica se o ID do pedido foi retornado pelo backend
       if (!response.data.id_pedido) {
         console.error("Erro: ID do pedido não retornado pelo backend.");
         return;
       }
 
-      // Atualiza o ID do pedido no estado local
+  
       editedItem.value.id_pedido = response.data.id_pedido;
       console.log(`Pedido criado com ID: ${editedItem.value.id_pedido}`);
     }
 
     console.log("Pedido salvo com sucesso!");
     close();
-    await carregarPedidos(); // Atualiza a lista após salvar
+    await carregarPedidos(); 
   } catch (error) {
     console.error("Erro ao salvar pedido:", error);
     if (error.response) {
@@ -251,7 +245,6 @@ const close = () => {
   dialog.value = false;
 };
 
-// Observa mudanças na seleção de produtos e sincroniza com os itens do pedido
 watch(selectedProducts, (novosProdutos) => {
   editedItem.value.itens = novosProdutos.map(produto => ({
     id_produto: produto.id_produto,
